@@ -1,0 +1,61 @@
+name = "elfilm-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-21"
+
+[env.production]
+name = "elfilm-api-prod"
+routes = [
+  { pattern = "api.elfilm.com/*", zone_name = "elfilm.com" }
+]
+
+[env.staging]
+name = "elfilm-api-staging"
+routes = [
+  { pattern = "staging-api.elfilm.com/*", zone_name = "elfilm.com" }
+]
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "elfilm"
+database_id = "YOUR_DATABASE_ID"
+migrations_dir = "migrations"
+
+# R2 Bucket Binding for images/posters
+[[r2_buckets]]
+binding = "POSTERS"
+bucket_name = "elfilm-posters"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "elfilm-images"
+
+# AI Binding for Cloudflare Workers AI
+[[ai]]
+binding = "AI"
+
+# Environment variables
+[env.production.vars]
+ENVIRONMENT = "production"
+API_VERSION = "v1"
+MAX_PAGE_SIZE = "100"
+ENABLE_AI = "true"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+API_VERSION = "v1"
+MAX_PAGE_SIZE = "50"
+ENABLE_AI = "true"
+
+# Build settings
+[build]
+command = "npm run build"
+cwd = "./"
+
+[build.upload]
+format = "modules"
+main = "./dist/index.js"
+
+# Observability
+[observability]
+enabled = true

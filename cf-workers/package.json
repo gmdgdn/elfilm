@@ -1,0 +1,32 @@
+{
+  "name": "elfilm-api",
+  "version": "1.0.0",
+  "description": "Production-ready API for Egyptian films database using Cloudflare Workers, D1, and AI",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --outfile=dist/index.js --external:__STATIC_CONTENT_MANIFEST",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "db:migrate": "wrangler migrations apply --local",
+    "db:seed": "node scripts/seed.js",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write 'src/**/*.ts'",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20240614.0",
+    "hono": "^4.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "esbuild": "^0.19.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.40.0"
+  }
+}
