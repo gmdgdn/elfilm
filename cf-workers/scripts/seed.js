@@ -7,8 +7,11 @@
  * Usage: node scripts/seed.js <path-to-elfilm-json>
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function seedDatabase() {
   try {
@@ -218,4 +221,7 @@ function escapeSql(str) {
 }
 
 // Run the seeding process
-seedDatabase();
+seedDatabase().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});
