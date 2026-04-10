@@ -1,0 +1,517 @@
+---
+import { getMenu, getSiteSettings } from "emdash";
+import {
+  WidgetArea,
+  EmDashHead,
+  EmDashBodyEnd,
+  EmDashBodyStart,
+} from "emdash/ui";
+import { createPublicPageContext } from "emdash/page";
+import LiveSearch from "emdash/ui/search";
+
+interface Props {
+  title: string;
+  description?: string | null;
+  image?: string | null;
+  canonical?: string | null;
+  openGraphType?: string;
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  content?: { collection: string; id: string; slug?: string | null };
+  lang?: string;
+  dir?: "ltr" | "rtl" | "auto";
+}
+
+const {
+  title,
+  description,
+  image,
+  canonical,
+  openGraphType = "website",
+  structuredData,
+  content,
+  lang = "en",
+  dir = "ltr",
+} = Astro.props;
+const settings = await getSiteSettings();
+const menu = await getMenu("primary");
+
+const pageCtx = createPublicPageContext({
+  Astro,
+  kind: content ? "content" : "custom",
+  pageType: "website",
+  title,
+  description,
+  canonical,
+  image,
+  content,
+});
+
+const archiveLinks = [
+  { href: "/", label: "Home" },
+  { href: "/movies", label: "Movies" },
+  { href: "/search", label: "Search" },
+  { href: "/genres", label: "Genres" },
+  { href: "/people", label: "People" },
+  { href: "/companies", label: "Companies" },
+  { href: "/posts", label: "Journal" },
+  { href: "/on-this-day", label: "Today" },
+];
+const policyLinks = [
+  { href: "/about", label: "About" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/dmca", label: "DMCA" },
+];
+const extraMenuItems =
+  menu?.items.filter((item) => !archiveLinks.some((link) => link.href === item.url)) ?? [];
+---
+
+<!doctype html>
+<html lang={lang} dir={dir}>
+  <head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{title}</title>
+		{description && <meta name="description" content={description} />}
+		{canonical && <link rel="canonical" href={canonical} />}
+		<meta property="og:title" content={title} />
+		{description && <meta property="og:description" content={description} />}
+		<meta property="og:type" content={openGraphType} />
+		{canonical && <meta property="og:url" content={canonical} />}
+		{image && <meta property="og:image" content={image} />}
+		<meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+		<meta name="twitter:title" content={title} />
+		{description && <meta name="twitter:description" content={description} />}
+		{image && <meta name="twitter:image" content={image} />}
+		{structuredData &&
+			(Array.isArray(structuredData) ? structuredData : [structuredData]).map((entry) => (
+				<script is:inline type="application/ld+json" set:html={JSON.stringify(entry)} />
+			))}
+		<EmDashHead page={pageCtx} />
+	</head>
+  <body>
+    <EmDashBodyStart page={pageCtx} />
+
+    <div class="site-shell">
+      <header class="site-header">
+        <div class="container nav-row">
+          <a href="/" class="brand">
+            <span class="brand-mark">EF</span>
+            <span>
+              <strong>{settings.title || "ElFilm"}</strong>
+              <small>{settings.tagline || "Egyptian cinema archive"}</small>
+            </span>
+          </a>
+
+          <nav class="primary-nav" aria-label="Primary">
+            {archiveLinks.map((link) => (
+              <a href={link.href} class={Astro.url.pathname === link.href ? "active" : ""}>
+                {link.label}
+              </a>
+            ))}
+            {extraMenuItems.map((item) => (
+              <a href={item.url} target={item.target}>
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <div class="nav-tools">
+            <div class="search-shell">
+              <LiveSearch placeholder="Search editorial content..." collections={["posts", "pages"]} />
+            </div>
+            <a href="/_emdash/admin" class="admin-link">Open CMS</a>
+          </div>
+        </div>
+      </header>
+
+      <main class="container page-content">
+        <slot />
+      </main>
+
+      <footer class="site-footer">
+        <div class="container footer-grid">
+          <div>
+            <p class="eyebrow">Hybrid stack</p>
+            <h2>{settings.title || "ElFilm"}</h2>
+            <p>
+              EmDash powers editorial pages and admin workflows, while the film archive remains modeled in
+              dedicated D1 tables for movies, people, companies, credits, and watch data.
+            </p>
+          </div>
+
+          <div>
+            <p class="eyebrow">Explore</p>
+            <ul class="footer-links">
+              {archiveLinks.map((link) => (
+                <li><a href={link.href}>{link.label}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p class="eyebrow">Widgets</p>
+            <div class="widget-shell">
+              <WidgetArea name="sidebar" />
+            </div>
+          </div>
+
+          <div>
+            <p class="eyebrow">Policies</p>
+            <ul class="footer-links">
+              {policyLinks.map((link) => (
+                <li><a href={link.href}>{link.label}</a></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <EmDashBodyEnd page={pageCtx} />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: dark;
+    --bg: #09090b;
+    --panel: rgba(24, 24, 27, 0.78);
+    --panel-strong: rgba(30, 30, 34, 0.92);
+    --text: #f6f6f7;
+    --muted: #b3b3bd;
+    --line: rgba(255, 255, 255, 0.08);
+    --accent: #e55b2d;
+    --accent-soft: rgba(229, 91, 45, 0.18);
+    --gold: #d3a85d;
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    --radius-xl: 32px;
+    --radius-lg: 24px;
+    --radius-md: 18px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    font-family: Inter, "Segoe UI", "Noto Sans Arabic", sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(229, 91, 45, 0.12), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(211, 168, 93, 0.1), transparent 22%),
+      linear-gradient(180deg, #111114 0%, #09090b 100%);
+    color: var(--text);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  .container {
+    width: min(1200px, calc(100% - 2rem));
+    margin: 0 auto;
+  }
+
+  .site-shell {
+    position: relative;
+  }
+
+  .site-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent 90%);
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    backdrop-filter: blur(20px);
+    background: rgba(9, 9, 11, 0.75);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  .brand strong {
+    display: block;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+  }
+
+  .brand small {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .brand-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--accent), #8e2b0e);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+  }
+
+  .primary-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .primary-nav a {
+    padding: 0.65rem 0.9rem;
+    border-radius: 999px;
+    color: var(--muted);
+    transition: 180ms ease;
+  }
+
+  .primary-nav a:hover,
+  .primary-nav a.active {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .search-shell {
+    min-width: 260px;
+  }
+
+  .search-shell form,
+  .search-shell [data-emdash-search-root] {
+    width: 100%;
+  }
+
+  .search-shell input {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 0.75rem 1rem;
+  }
+
+  .admin-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.78rem 1rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(229, 91, 45, 0.35);
+    color: #ffd8c9;
+    white-space: nowrap;
+  }
+
+  .page-content {
+    padding: 2rem 0 4rem;
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--line);
+    margin-top: 3rem;
+    padding: 2.5rem 0 4rem;
+    background: rgba(0, 0, 0, 0.16);
+  }
+
+  .footer-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1.35fr 0.8fr 1fr 0.8fr;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 0.72rem;
+    color: var(--gold);
+  }
+
+  .site-footer h2,
+  .site-footer p {
+    margin: 0;
+  }
+
+  .site-footer p + p {
+    margin-top: 0.8rem;
+  }
+
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .footer-links a {
+    color: var(--muted);
+  }
+
+  .widget-shell > * {
+    border-radius: var(--radius-md);
+  }
+
+  .surface {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+  }
+
+  .surface-compact {
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-lg);
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-heading h2,
+  .section-heading p {
+    margin: 0;
+  }
+
+  .section-heading p {
+    color: var(--muted);
+    max-width: 48rem;
+  }
+
+  .poster-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .poster-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 100%;
+  }
+
+  .poster-card .poster-image {
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  }
+
+  .poster-card .poster-copy {
+    padding: 1rem;
+  }
+
+  .poster-card h3,
+  .poster-card p {
+    margin: 0;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.5rem 0.8rem;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  @media (max-width: 1100px) {
+    .nav-row {
+      flex-wrap: wrap;
+    }
+
+    .primary-nav {
+      order: 3;
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .nav-tools {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .search-shell {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .container {
+      width: min(100% - 1rem, 1200px);
+    }
+
+    .nav-tools {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .admin-link {
+      width: 100%;
+    }
+  }
+</style>

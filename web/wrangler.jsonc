@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "elfilm-web",
+  "compatibility_date": "2026-04-08",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "main": "./worker/index.ts",
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "NEXT_PUBLIC_API_URL": "https://elfilm.anagmdgdn.workers.dev",
+    "NEXT_PUBLIC_ASSET_URL": "https://film.gmd.gdn"
+  },
+  "images": {
+    "binding": "IMAGES"
+  }
+}

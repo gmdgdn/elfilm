@@ -1,0 +1,637 @@
+---
+import { getEmDashCollection, getSiteSettings } from "emdash";
+import { Image } from "emdash/ui";
+import Base from "../layouts/Base.astro";
+import {
+  getArchiveStats,
+  getFeaturedMovies,
+  getRecentMovies,
+  getTodayHighlights,
+} from "../lib/archive";
+
+const settings = await getSiteSettings();
+const today = new Date();
+const month = today.getMonth() + 1;
+const day = today.getDate();
+const dateLabel = new Intl.DateTimeFormat("ar-EG", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(today);
+
+const [{ entries: posts, cacheHint }, stats, featuredMovies, recentMovies, todayHighlights] = await Promise.all([
+  getEmDashCollection("posts", { orderBy: { published_at: "desc" }, limit: 3 }),
+  getArchiveStats(),
+  getFeaturedMovies(6),
+  getRecentMovies(8),
+  getTodayHighlights(month, day, 6),
+]);
+
+Astro.cache.set(cacheHint);
+
+const spotlight = featuredMovies[0];
+const spotlightTitle = spotlight?.title_ar || spotlight?.title || spotlight?.title_en || "ElFilm";
+const bornToday = todayHighlights.born.people;
+const diedToday = todayHighlights.died.people;
+const premieresToday = todayHighlights.premieres;
+---
+
+<Base
+  title={`${settings.title || "ElFilm"} | Egyptian cinema archive`}
+  description="ElFilm maps Egyptian cinema with archive records, semantic search, on-this-day highlights, and the editorial CMS behind the catalog."
+>
+  <section class="hero surface">
+    <div class="hero-copy">
+      <p class="eyebrow">Egyptian cinema archive</p>
+      <h1>اكتشف روح السينما المصرية.. مفهرسة كما تعيش في الذاكرة.</h1>
+      <p class="hero-text">
+        {settings.tagline || "The Egyptian cinema archive"} now brings film records, people, companies, and legal
+        watch links together in one place, with daily highlights, semantic search, and editorial pages shaped for
+        long-form archive browsing.
+      </p>
+      <div class="hero-actions">
+        <a href="/movies" class="cta">استكشف الأرشيف</a>
+        <a href="/about" class="cta secondary">About the project</a>
+        <a href="/_emdash/admin" class="cta secondary">Open EmDash admin</a>
+      </div>
+      <form method="get" action="/search" class="hero-search">
+        <input
+          type="search"
+          name="q"
+          placeholder="ما الذي تبحث عنه؟ استكشف آلاف الأفلام، الفنانين، أو المخرجين..."
+          aria-label="Search the archive"
+        />
+        <button type="submit">Search archive</button>
+      </form>
+      <div class="hero-stats">
+        <div>
+          <strong>{stats.movies.toLocaleString("en-US")}</strong>
+          <span>movies</span>
+        </div>
+        <div>
+          <strong>{stats.people.toLocaleString("en-US")}</strong>
+          <span>people</span>
+        </div>
+        <div>
+          <strong>{stats.companies.toLocaleString("en-US")}</strong>
+          <span>companies</span>
+        </div>
+        <div>
+          <strong>{stats.genres.toLocaleString("en-US")}</strong>
+          <span>genres</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-poster">
+      {spotlight?.poster_url ? (
+        <img src={spotlight.poster_url} alt={spotlightTitle} />
+      ) : (
+        <div class="poster-fallback">
+          <span>ElFilm</span>
+        </div>
+      )}
+      <div class="poster-caption">
+        <p class="eyebrow">Archive spotlight</p>
+        <h2>{spotlightTitle}</h2>
+        {spotlight?.year && <p>{spotlight.year}</p>}
+      </div>
+    </div>
+  </section>
+
+  <section class="split-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Collections</p>
+        <h2>Archive surfaces that feel current, not static</h2>
+      </div>
+      <p>
+        Browse the archive by entity, then branch out into the editorial layer, daily highlights, and policy pages
+        that explain how the platform works.
+      </p>
+    </div>
+
+    <div class="collection-grid">
+      <a class="surface-compact collection-card" href="/movies">
+        <span>Movies</span>
+        <strong>{stats.movies.toLocaleString("en-US")}</strong>
+        <p>Film records, summaries, posters, genres, tags, and watch links.</p>
+      </a>
+      <a class="surface-compact collection-card" href="/people">
+        <span>People</span>
+        <strong>{stats.people.toLocaleString("en-US")}</strong>
+        <p>Actors, directors, writers, and the credit graph that connects eras together.</p>
+      </a>
+      <a class="surface-compact collection-card" href="/on-this-day">
+        <span>Today</span>
+        <strong>{bornToday.length + diedToday.length + premieresToday.length}</strong>
+        <p>Births, deaths, and archive notes tied to the current day in cinema history.</p>
+      </a>
+      <a class="surface-compact collection-card" href="/posts">
+        <span>Journal</span>
+        <strong>{posts.length.toLocaleString("en-US")}</strong>
+        <p>Editorial content authored in EmDash and rendered through Astro templates.</p>
+      </a>
+    </div>
+
+    <div class="policy-strip">
+      <a href="/about" class="policy-pill">About</a>
+      <a href="/privacy" class="policy-pill">Privacy policy</a>
+      <a href="/dmca" class="policy-pill">DMCA and takedowns</a>
+    </div>
+  </section>
+
+  <section class="split-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Featured films</p>
+        <h2>High-signal titles from the archive</h2>
+      </div>
+      <p>These are pulled directly from the existing `movies` table in D1.</p>
+    </div>
+
+    <div class="poster-grid">
+      {featuredMovies.map((movie) => {
+        const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+        return (
+          <a href={`/movies/${movie.slug || movie.id}`} class="surface-compact poster-card">
+            {movie.poster_url ? (
+              <img src={movie.poster_url} alt={title} class="poster-image" />
+            ) : (
+              <div class="poster-image poster-fallback"><span>{title}</span></div>
+            )}
+            <div class="poster-copy">
+              <p class="muted">{movie.year || "Unknown year"}</p>
+              <h3>{title}</h3>
+              {movie.summary_ar && <p class="muted clamp-two">{movie.summary_ar}</p>}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="split-section surface day-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">On this day</p>
+        <h2>ذاكرة السينما لا تنسى</h2>
+      </div>
+      <p>{dateLabel}</p>
+    </div>
+
+    <div class="day-grid">
+      <div class="day-panel">
+        <p class="day-label">Births</p>
+        {bornToday.length > 0 ? (
+          <div class="day-list">
+            {bornToday.map((person) => {
+              const name = person.name_ar || person.name_en || "Unknown";
+              return (
+                <a href={`/people/${person.slug || person.id}`} class="day-row">
+                  <div>
+                    <strong>{name}</strong>
+                    <p>{person.name_en || person.country || "Egyptian cinema archive"}</p>
+                  </div>
+                  {person.birthdate && <span>{person.birthdate}</span>}
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="muted">No recorded births for this date yet.</p>
+        )}
+      </div>
+
+      <div class="day-panel">
+        <p class="day-label">Deaths</p>
+        {diedToday.length > 0 ? (
+          <div class="day-list">
+            {diedToday.map((person) => {
+              const name = person.name_ar || person.name_en || "Unknown";
+              return (
+                <a href={`/people/${person.slug || person.id}`} class="day-row">
+                  <div>
+                    <strong>{name}</strong>
+                    <p>{person.name_en || person.country || "Egyptian cinema archive"}</p>
+                  </div>
+                  {person.deathdate && <span>{person.deathdate}</span>}
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="muted">No recorded deaths for this date yet.</p>
+        )}
+      </div>
+    </div>
+
+    <div class="day-note">
+      <p>
+        Premiere tracking is now wired to the archive schema. When `release_date` is present, films with premieres on
+        this date will appear here alongside people born and died today.
+      </p>
+      <a href="/on-this-day" class="cta secondary">Open the full page</a>
+    </div>
+  </section>
+
+  <section class="dual-column">
+    <div class="surface column-panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Recent imports</p>
+          <h2>Newest archive entries</h2>
+        </div>
+      </div>
+      <div class="entry-list">
+        {recentMovies.map((movie) => {
+          const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+          return (
+            <a href={`/movies/${movie.slug || movie.id}`} class="entry-row">
+              <div>
+                <strong>{title}</strong>
+                <p>{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+              </div>
+              <span>{movie.year || "—"}</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+
+    <div class="surface column-panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">EmDash editorial</p>
+          <h2>Recent journal posts</h2>
+        </div>
+      </div>
+
+      {posts.length === 0 ? (
+        <div class="empty-state">
+          <p>No editorial posts yet.</p>
+          <a href="/_emdash/admin/content/posts/new" class="cta secondary">Create the first post</a>
+        </div>
+      ) : (
+        <div class="entry-list">
+          {posts.map((post) => (
+            <a href={`/posts/${post.id}`} class="entry-row">
+              <div>
+                <strong>{post.data.title}</strong>
+                <p>{post.data.excerpt || "Open the post to read more."}</p>
+              </div>
+              {post.data.featured_image ? (
+                <div class="post-thumb">
+                  <Image image={post.data.featured_image} />
+                </div>
+              ) : (
+                <span>Post</span>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 360px);
+    padding: 2rem;
+    overflow: hidden;
+  }
+
+  .hero-copy h1,
+  .hero-copy p,
+  .hero-poster h2,
+  .hero-poster p {
+    margin: 0;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(3rem, 7vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+
+  .hero-text {
+    margin-top: 1rem !important;
+    max-width: 54rem;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.8;
+  }
+
+  .hero-actions,
+  .hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+  }
+
+  .hero-actions {
+    margin-top: 1.5rem;
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.92rem 1.2rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .cta.secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--line);
+  }
+
+  .hero-stats {
+    margin-top: 2rem;
+  }
+
+  .hero-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    max-width: 46rem;
+  }
+
+  .hero-search input,
+  .hero-search button {
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    padding: 0.95rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font: inherit;
+  }
+
+  .hero-search button {
+    background: rgba(229, 91, 45, 0.14);
+    border-color: rgba(229, 91, 45, 0.35);
+    color: #ffd8c9;
+    font-weight: 600;
+  }
+
+  .hero-stats div {
+    min-width: 130px;
+    padding: 1rem;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .hero-stats strong {
+    display: block;
+    font-size: 1.5rem;
+  }
+
+  .hero-stats span {
+    color: var(--muted);
+  }
+
+  .hero-poster {
+    position: relative;
+    min-height: 520px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .hero-poster img,
+  .poster-fallback {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .poster-fallback {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, rgba(229, 91, 45, 0.18), rgba(0, 0, 0, 0.16));
+    color: rgba(255, 255, 255, 0.7);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .poster-caption {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.9));
+  }
+
+  .split-section {
+    margin-top: 2.5rem;
+  }
+
+  .policy-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .policy-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--muted);
+  }
+
+  .collection-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .collection-card {
+    display: block;
+    padding: 1.25rem;
+  }
+
+  .collection-card span,
+  .collection-card strong,
+  .collection-card p {
+    display: block;
+    margin: 0;
+  }
+
+  .collection-card span {
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+  }
+
+  .collection-card strong {
+    font-size: 2rem;
+    margin-top: 0.9rem;
+  }
+
+  .collection-card p {
+    margin-top: 0.8rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .dual-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .column-panel {
+    padding: 1.5rem;
+  }
+
+  .entry-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .entry-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem 1.1rem;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .entry-row strong,
+  .entry-row p {
+    margin: 0;
+  }
+
+  .entry-row p {
+    margin-top: 0.45rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .entry-row span {
+    color: var(--gold);
+  }
+
+  .day-section {
+    padding: 1.5rem;
+  }
+
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .day-panel {
+    padding: 1rem;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .day-label {
+    margin: 0 0 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+    color: var(--gold);
+  }
+
+  .day-list {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .day-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .day-row p {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+  }
+
+  .day-row span {
+    color: var(--gold);
+  }
+
+  .day-note {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .post-thumb {
+    width: 72px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .empty-state {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+    padding: 1rem 0 0;
+  }
+
+  .clamp-two {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (max-width: 980px) {
+    .hero,
+    .dual-column,
+    .collection-grid,
+    .day-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-poster {
+      min-height: 420px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .hero-search {
+      grid-template-columns: 1fr;
+    }
+
+    .day-note {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

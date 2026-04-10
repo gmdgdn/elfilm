@@ -1,0 +1,122 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCompanyBySlug } from "../../lib/archive";
+import { absoluteUrl, breadcrumbSchema, companySchema } from "../../lib/seo";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/404");
+}
+
+const company = await getCompanyBySlug(slug);
+
+if (!company) {
+  return Astro.redirect("/404");
+}
+
+const canonical = absoluteUrl(`/companies/${company.slug || company.id}`);
+const structuredData = [
+  breadcrumbSchema([
+    { name: "ElFilm", url: absoluteUrl("/") },
+    { name: "Companies", url: absoluteUrl("/companies") },
+    { name: company.name_ar, url: canonical },
+  ]),
+  companySchema(company),
+];
+---
+
+<Base
+  title={`${company.name_ar} | ElFilm`}
+  description={company.description_ar || `Archive company profile for ${company.name_ar}.`}
+  canonical={canonical}
+  openGraphType="profile"
+  structuredData={structuredData}
+>
+  <article class="detail-shell">
+    <section class="surface panel hero">
+      <p class="eyebrow">{company.kind || "Company profile"}</p>
+      <h1>{company.name_ar}</h1>
+      <div class="pill-row">
+        {company.name_en && <span class="pill">{company.name_en}</span>}
+        {company.country && <span class="pill">{company.country}</span>}
+        {company.founded_year && <span class="pill">Founded {company.founded_year}</span>}
+        {company.closed_year && <span class="pill">Closed {company.closed_year}</span>}
+      </div>
+      <p class="summary">{company.description_ar || "Company description is not available yet."}</p>
+    </section>
+
+    <section class="surface panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Productions</p>
+          <h2>Associated titles</h2>
+        </div>
+      </div>
+      <div class="production-list">
+        {company.productions.length > 0 ? company.productions.map((production) => (
+          <a href={`/movies/${production.movie_slug || production.movie_id}`} class="credit-row">
+            <div>
+              <strong>{production.title_ar || production.title_en || "Untitled"}</strong>
+              <p>{production.role_kind}</p>
+            </div>
+            <span>{production.year || "—"}</span>
+          </a>
+        )) : <p class="muted">No linked productions are available yet.</p>}
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  .detail-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .panel {
+    padding: 1.5rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .summary {
+    margin-top: 1.2rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 58rem;
+  }
+
+  .production-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .credit-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .credit-row p {
+    margin-top: 0.35rem;
+    color: var(--muted);
+  }
+
+  .credit-row span {
+    color: var(--gold);
+  }
+</style>

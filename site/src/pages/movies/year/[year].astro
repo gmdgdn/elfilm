@@ -1,0 +1,203 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { countMovies, listGenres, listMovies } from "../../../lib/archive";
+
+const { year } = Astro.params;
+const targetYear = year ? Number.parseInt(year, 10) : Number.NaN;
+
+if (Number.isNaN(targetYear) || targetYear < 1900 || targetYear > 2030) {
+  return Astro.redirect("/movies");
+}
+
+const search = Astro.url.searchParams;
+const page = Math.max(Number.parseInt(search.get("page") || "1", 10) || 1, 1);
+const genreId = search.get("genreId") ? Number.parseInt(search.get("genreId") as string, 10) : undefined;
+const limit = 24;
+const offset = (page - 1) * limit;
+
+const [genres, movies, total] = await Promise.all([
+  listGenres(),
+  listMovies({
+    limit,
+    offset,
+    yearMin: targetYear,
+    yearMax: targetYear,
+    genreId,
+    orderBy: "title",
+    direction: "ASC",
+  }),
+  countMovies({
+    yearMin: targetYear,
+    yearMax: targetYear,
+    genreId,
+  }),
+]);
+
+const totalPages = Math.max(Math.ceil(total / limit), 1);
+const selectedGenre = genres.find((genre) => genre.id === genreId);
+
+function pageHref(nextPage: number) {
+  const params = new URLSearchParams();
+  if (genreId) {
+    params.set("genreId", String(genreId));
+  }
+  if (nextPage > 1) {
+    params.set("page", String(nextPage));
+  }
+  const query = params.toString();
+  return query ? `/movies/year/${targetYear}?${query}` : `/movies/year/${targetYear}`;
+}
+
+function genreHref(nextGenreId?: number | null) {
+  const params = new URLSearchParams();
+  if (nextGenreId) {
+    params.set("genreId", String(nextGenreId));
+  }
+  const query = params.toString();
+  return query ? `/movies/year/${targetYear}?${query}` : `/movies/year/${targetYear}`;
+}
+---
+
+<Base
+  title={`Movies from ${targetYear} | ElFilm`}
+  description={`Browse archive titles from ${targetYear} in the Astro + EmDash rebuild.`}
+>
+  <section class="surface intro">
+    <p class="eyebrow">Production year</p>
+    <h1>Movies from {targetYear}</h1>
+    <p class="muted intro-copy">
+      {total} title{total === 1 ? "" : "s"} in the archive for this year
+      {selectedGenre ? ` · filtered by ${selectedGenre.name_ar}` : ""}.
+    </p>
+  </section>
+
+  <section class="filter-block">
+    <p class="eyebrow">Filter by genre</p>
+    <div class="pill-row">
+      <a href={genreHref(null)} class:list={["pill", !genreId && "active"]}>All genres</a>
+      {genres.map((genre) => (
+        <a href={genreHref(genre.id)} class:list={["pill", genre.id === genreId && "active"]}>
+          {genre.name_ar}
+        </a>
+      ))}
+    </div>
+  </section>
+
+  {
+    movies.length > 0 ? (
+      <section class="poster-grid">
+        {movies.map((movie) => {
+          const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+          return (
+            <a href={`/movies/${movie.slug || movie.id}`} class="surface-compact poster-card">
+              {movie.poster_url ? (
+                <img src={movie.poster_url} alt={title} class="poster-image" />
+              ) : (
+                <div class="poster-image placeholder"><span>{title}</span></div>
+              )}
+              <div class="poster-copy">
+                <p class="muted">{movie.year || targetYear}</p>
+                <h2>{title}</h2>
+                <p class="muted clamp-three">{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+              </div>
+            </a>
+          );
+        })}
+      </section>
+    ) : (
+      <div class="surface empty-state">
+        <p>No titles matched this year and genre combination.</p>
+      </div>
+    )
+  }
+
+  {
+    totalPages > 1 && (
+      <nav class="pagination" aria-label="Year pagination">
+        <a href={page > 1 ? pageHref(page - 1) : "#"} class:list={["page-link", page <= 1 && "disabled"]}>
+          Previous
+        </a>
+        <span class="page-status">Page {page} of {totalPages}</span>
+        <a href={page < totalPages ? pageHref(page + 1) : "#"} class:list={["page-link", page >= totalPages && "disabled"]}>
+          Next
+        </a>
+      </nav>
+    )
+  }
+</Base>
+
+<style>
+  h1,
+  h2,
+  p,
+  span {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.3rem, 6vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .intro {
+    padding: 1.5rem;
+  }
+
+  .intro-copy {
+    margin-top: 1rem;
+    line-height: 1.8;
+  }
+
+  .filter-block {
+    display: grid;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+  }
+
+  .pill.active {
+    border-color: rgba(229, 91, 45, 0.45);
+    background: rgba(229, 91, 45, 0.14);
+    color: #ffd8c9;
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .clamp-three {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .empty-state {
+    margin-top: 1.2rem;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .page-link,
+  .page-status {
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .page-link.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+</style>

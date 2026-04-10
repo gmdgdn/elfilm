@@ -1,0 +1,31 @@
+name = "elfilm"
+main = "src/index.ts"
+compatibility_date = "2024-11-21"
+account_id = "e18437e0f43bf91a8a38bd39c988001c"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "elfilm_db"
+database_id = "0281216f-f7ac-4cc1-a516-a57a7345c216"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "elfilm-assets"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "elfilm-movies"
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[env.production]
+name = "elfilm"
+
+[env.development]
+name = "elfilm-dev"
+

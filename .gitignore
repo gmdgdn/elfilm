@@ -1,0 +1,101 @@
+# Root workspace ignores
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Node / frontend
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+**/dist/
+.astro/
+**/.astro/
+.wrangler/
+**/.wrangler/
+.vercel/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python / local tooling
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Logs and temp files
+*.log
+*.out
+*.err
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+tmp_*.bin
+temp-poster*.jpg
+build_log.txt
+
+# Local git metadata from nested repos
+**/.git
+.git-web-backup/
+
+# Databases and generated seeds
+*.db
+*.sqlite
+seed.sql
+seed_*.sql
+d1_import.sql
+
+# Bulk generated data exports
+*.csv
+*.xlsx
+movies_*.json
+people_*.json
+companies_*.json
+*_enriched.json
+*_merged.json
+*_details.json
+*_details_local.json
+*_master.json
+*_master_r2.json
+*_subset*.json
+*_fallback*.json
+comparison_report.json
+data_*_report.json
+final_statistics.json
+id_mapping.json
+
+# Generated data directories
+id_mappings*/
+prepared_cloudflare*/
+prepared_db/
+public_data*/
+
+# Runtime or upload data
+assets/
+public/
+site/uploads/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Local agent/editor metadata
+site/.agents/
+site/.claude/
+
+# Additional generated exports and dumps
+egyptian_*.json
+elcinema_*.json
+exa_*.json
+cloudflare_watch_*.json
+migration_progress_*.txt
+missing_titles.txt
+*_dump*.html

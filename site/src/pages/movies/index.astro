@@ -1,0 +1,69 @@
+---
+import Base from "../../layouts/Base.astro";
+import { listMovies } from "../../lib/archive";
+
+const movies = await listMovies({ limit: 36, offset: 0 });
+---
+
+<Base
+  title="Movies | ElFilm"
+  description="Browse the Egyptian cinema archive from the Astro + EmDash rebuild."
+>
+  <section class="section-heading">
+    <div>
+      <p class="eyebrow">Archive collection</p>
+      <h1>Movies</h1>
+    </div>
+    <p>
+      These records are rendered directly from the existing `movies` table in D1 while EmDash handles editorial pages,
+      posts, menus, and media workflows.
+    </p>
+  </section>
+
+  <section class="poster-grid">
+    {movies.map((movie) => {
+      const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+      return (
+        <a href={`/movies/${movie.slug || movie.id}`} class="surface-compact poster-card">
+          {movie.poster_url ? (
+            <img src={movie.poster_url} alt={title} class="poster-image" />
+          ) : (
+            <div class="poster-image placeholder"><span>{title}</span></div>
+          )}
+          <div class="poster-copy">
+            <p class="muted">{movie.year || "Unknown year"}</p>
+            <h2>{title}</h2>
+            <p class="muted clamp-three">{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+          </div>
+        </a>
+      );
+    })}
+  </section>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .clamp-three {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

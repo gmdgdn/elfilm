@@ -1,0 +1,96 @@
+---
+import { getEmDashCollection, getEntryTerms } from "emdash";
+import { Image } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+
+const { entries: posts, cacheHint } = await getEmDashCollection("posts", {
+	orderBy: { published_at: "desc" },
+});
+Astro.cache.set(cacheHint);
+
+// Fetch tags for each post
+const postsWithTags = await Promise.all(
+	posts.map(async (post) => {
+		const tags = await getEntryTerms("posts", post.data.id, "tag");
+		return { post, tags };
+	})
+);
+---
+
+<Base title="Journal | ElFilm" description="Editorial posts managed in EmDash.">
+	<section class="section-heading">
+		<div>
+			<p class="eyebrow">EmDash editorial</p>
+			<h1>Journal</h1>
+		</div>
+		<p>Posts, notes, and editorial writing managed in EmDash and rendered through Astro.</p>
+	</section>
+
+	{
+		postsWithTags.length === 0 ? (
+			<p class="muted">No posts yet.</p>
+		) : (
+			<ul class="post-list">
+				{postsWithTags.map(({ post, tags }) => (
+					<li class="surface-compact post-card">
+						<a href={`/posts/${post.id}`}>
+							{post.data.featured_image && (
+								<Image image={post.data.featured_image} class="post-image" />
+							)}
+							<h2>{post.data.title}</h2>
+						</a>
+						{post.data.excerpt && <p>{post.data.excerpt}</p>}
+						{tags.length > 0 && (
+							<div class="pill-row tag-row">
+								{tags.map((t) => (
+									<a href={`/tag/${t.slug}`} class="pill">{t.label}</a>
+								))}
+							</div>
+						)}
+					</li>
+				))}
+			</ul>
+		)
+	}
+</Base>
+
+<style>
+	h1,
+	h2,
+	p {
+		margin: 0;
+	}
+
+	h1 {
+		font-size: clamp(2.3rem, 6vw, 3.8rem);
+		letter-spacing: -0.04em;
+	}
+
+	.post-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: grid;
+		gap: 1rem;
+	}
+
+	.post-card {
+		padding: 1rem;
+	}
+
+	.post-image {
+		width: 100%;
+		border-radius: 18px;
+		margin-bottom: 1rem;
+	}
+
+	.post-card p {
+		margin-top: 0.7rem;
+		color: var(--muted);
+		line-height: 1.7;
+	}
+
+	.tag-row {
+		margin-top: 0.9rem;
+	}
+</style>

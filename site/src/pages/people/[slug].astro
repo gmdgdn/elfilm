@@ -1,0 +1,163 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getPersonBySlug } from "../../lib/archive";
+import { absoluteUrl, breadcrumbSchema, personSchema } from "../../lib/seo";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/404");
+}
+
+const person = await getPersonBySlug(slug);
+
+if (!person) {
+  return Astro.redirect("/404");
+}
+
+const name = person.name_ar || person.name_en || "Unknown";
+const canonical = absoluteUrl(`/people/${person.slug || person.id}`);
+const structuredData = [
+  breadcrumbSchema([
+    { name: "ElFilm", url: absoluteUrl("/") },
+    { name: "People", url: absoluteUrl("/people") },
+    { name, url: canonical },
+  ]),
+  personSchema(person),
+];
+---
+
+<Base
+  title={`${name} | ElFilm`}
+  description={person.bio_ar || `Archive profile for ${name}.`}
+  canonical={canonical}
+  image={person.profile_image}
+  openGraphType="profile"
+  structuredData={structuredData}
+>
+  <article class="detail-shell">
+    <section class="surface hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Archive profile</p>
+        <h1>{name}</h1>
+        <div class="pill-row">
+          {person.name_en && <span class="pill">{person.name_en}</span>}
+          {person.country && <span class="pill">{person.country}</span>}
+          {person.birthdate && <span class="pill">Born {person.birthdate}</span>}
+          {person.deathdate && <span class="pill">Died {person.deathdate}</span>}
+        </div>
+        <p class="summary">{person.bio_ar || "Biography not available yet."}</p>
+      </div>
+
+      <div class="portrait-shell">
+        {person.profile_image ? (
+          <img src={person.profile_image} alt={name} class="portrait" />
+        ) : (
+          <div class="portrait placeholder"><span>{name}</span></div>
+        )}
+      </div>
+    </section>
+
+    <section class="surface panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Filmography</p>
+          <h2>Credits</h2>
+        </div>
+      </div>
+
+      <div class="filmography-list">
+        {person.filmography.length > 0 ? person.filmography.map((credit) => (
+          <a href={`/movies/${credit.movie_slug || credit.movie_id}`} class="credit-row">
+            <div>
+              <strong>{credit.title_ar || credit.title_en || "Untitled"}</strong>
+              <p>{credit.role_credit || credit.role_kind}</p>
+            </div>
+            <span>{credit.year || "—"}</span>
+          </a>
+        )) : <p class="muted">Filmography is not available yet.</p>}
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  .detail-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) 300px;
+    gap: 1.5rem;
+    padding: 1.75rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .summary {
+    margin-top: 1.4rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .portrait {
+    width: 100%;
+    aspect-ratio: 1 / 1.12;
+    object-fit: cover;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .panel {
+    padding: 1.4rem;
+  }
+
+  .filmography-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .credit-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .credit-row p {
+    margin-top: 0.35rem;
+    color: var(--muted);
+  }
+
+  .credit-row span {
+    color: var(--gold);
+  }
+
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,43 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "elfilm-site",
+	"main": "./src/worker.ts",
+	"compatibility_date": "2026-04-06",
+	"account_id": "e18437e0f43bf91a8a38bd39c988001c",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"vars": {
+		"ASSET_BASE_URL": "https://elfilm.anagmdgdn.workers.dev"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "elfilm_db",
+			"database_id": "0281216f-f7ac-4cc1-a516-a57a7345c216",
+		},
+	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "elfilm-assets",
+		},
+	],
+	"vectorize": [
+		{
+			"binding": "VECTORIZE",
+			"index_name": "elfilm-movies",
+		},
+	],
+	"ai": {
+		"binding": "AI",
+	},
+	"observability": {
+		"enabled": true,
+	},
+	"worker_loaders": [
+		{
+			"binding": "LOADER",
+		},
+	],
+}

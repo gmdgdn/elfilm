@@ -1,0 +1,253 @@
+---
+import Base from "../layouts/Base.astro";
+import { getTodayHighlights } from "../lib/archive";
+
+const today = new Date();
+const month = today.getMonth() + 1;
+const day = today.getDate();
+const dateLabel = new Intl.DateTimeFormat("ar-EG", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(today);
+
+const highlights = await getTodayHighlights(month, day, 12);
+const premieres = highlights.premieres;
+---
+
+<Base
+  title="حدث في مثل هذا اليوم | ElFilm"
+  description="Births and deaths from Egyptian cinema on the current date. Premiere tracking will appear once release dates are modeled."
+  lang="ar"
+  dir="rtl"
+>
+  <section class="surface hero">
+    <div>
+      <p class="eyebrow">ذاكرة الأيام</p>
+      <h1>حدث في مثل هذا اليوم</h1>
+      <p class="lead">{dateLabel}</p>
+      <p class="muted">
+        يعرض هذا القسم مواليد ووفَيّات صُنّاع السينما المرتبطة بتاريخ اليوم. أمّا العروض الأولى للأفلام فتحتاج
+        إلى حقل تاريخ إصدار مستقل في قاعدة البيانات، لذلك تظهر كميزة جاهزة للمرحلة التالية.
+      </p>
+    </div>
+
+    <div class="stats-card">
+      <div>
+        <strong>{highlights.born.count}</strong>
+        <span>مواليد</span>
+      </div>
+      <div>
+        <strong>{highlights.died.count}</strong>
+        <span>وفيات</span>
+      </div>
+      <div>
+        <strong>{premieres.length}</strong>
+        <span>عروض أولى</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="split">
+    <div class="surface-compact panel">
+      <p class="eyebrow">مواليد اليوم</p>
+      <div class="item-list">
+        {highlights.born.people.length > 0 ? (
+          highlights.born.people.map((person) => {
+            const name = person.name_ar || person.name_en || "Unknown";
+            return (
+              <a href={`/people/${person.slug || person.id}`} class="item-row">
+                <div>
+                  <strong>{name}</strong>
+                  <p>{person.name_en || person.country || "Egyptian cinema archive"}</p>
+                </div>
+                {person.birthdate && <span>{person.birthdate}</span>}
+              </a>
+            );
+          })
+        ) : (
+          <p class="muted">لا توجد مواليد مسجلة لهذا اليوم بعد.</p>
+        )}
+      </div>
+    </div>
+
+    <div class="surface-compact panel">
+      <p class="eyebrow">وفيات اليوم</p>
+      <div class="item-list">
+        {highlights.died.people.length > 0 ? (
+          highlights.died.people.map((person) => {
+            const name = person.name_ar || person.name_en || "Unknown";
+            return (
+              <a href={`/people/${person.slug || person.id}`} class="item-row">
+                <div>
+                  <strong>{name}</strong>
+                  <p>{person.name_en || person.country || "Egyptian cinema archive"}</p>
+                </div>
+                {person.deathdate && <span>{person.deathdate}</span>}
+              </a>
+            );
+          })
+        ) : (
+          <p class="muted">لا توجد وفيات مسجلة لهذا اليوم بعد.</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="surface-compact panel premieres-panel">
+    <p class="eyebrow">العروض الأولى</p>
+    <div class="item-list">
+      {premieres.length > 0 ? (
+        premieres.map((movie) => {
+          const title = movie.title_ar || movie.title_en || movie.title || "Unknown";
+          return (
+            <a href={`/movies/${movie.slug || movie.id}`} class="item-row">
+              <div>
+                <strong>{title}</strong>
+                <p>{movie.year || "Unknown year"}</p>
+              </div>
+              {movie.release_date && <span>{movie.release_date}</span>}
+            </a>
+          );
+        })
+      ) : (
+        <p class="muted">لا توجد عروض أولى موثقة لهذا اليوم بعد، لكن البنية جاهزة فور توفر تاريخ العرض.</p>
+      )}
+    </div>
+  </section>
+
+  <section class="surface note">
+    <p class="eyebrow">العروض الأولى</p>
+    <h2>جاهزة للمرحلة التالية</h2>
+    <p>
+      يعتمد هذا القسم الآن على حقل `release_date` إن كان موجوداً. إذا كانت السجلات قديمة ولا تتضمن هذا الحقل،
+      فسيبقى العرض فارغاً إلى أن تكتمل ترقية البيانات.
+    </p>
+    <a href="/movies" class="cta">استكشف الأفلام</a>
+  </section>
+</Base>
+
+<style>
+  .hero,
+  .note {
+    padding: 1.75rem;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 340px);
+    gap: 1.5rem;
+  }
+
+  .lead {
+    margin: 0.8rem 0 0;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    letter-spacing: -0.04em;
+  }
+
+  .muted {
+    margin-top: 1rem;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+
+  .stats-card {
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
+    padding: 1rem;
+    border-radius: 28px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .stats-card div {
+    padding: 1rem;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .stats-card strong {
+    display: block;
+    font-size: 1.6rem;
+  }
+
+  .stats-card span {
+    color: var(--muted);
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .panel {
+    padding: 1.4rem;
+  }
+
+  .premieres-panel {
+    margin-top: 1.5rem;
+  }
+
+  .item-list {
+    display: grid;
+    gap: 0.8rem;
+    margin-top: 0.9rem;
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .item-row p {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+  }
+
+  .item-row span {
+    color: var(--gold);
+  }
+
+  .note {
+    margin-top: 1.5rem;
+  }
+
+  .note h2,
+  .note p {
+    margin: 0;
+  }
+
+  .note p {
+    margin-top: 0.8rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 58rem;
+  }
+
+  .cta {
+    display: inline-flex;
+    margin-top: 1rem;
+    padding: 0.92rem 1.2rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  @media (max-width: 920px) {
+    .hero,
+    .split {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

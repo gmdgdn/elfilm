@@ -1,0 +1,78 @@
+---
+import Base from "../../layouts/Base.astro";
+import { listCompanies } from "../../lib/archive";
+
+const companies = await listCompanies(36, 0);
+---
+
+<Base
+  title="Companies | ElFilm"
+  description="Browse production and distribution companies from the ElFilm archive."
+>
+  <section class="section-heading">
+    <div>
+      <p class="eyebrow">Archive collection</p>
+      <h1>Companies</h1>
+    </div>
+    <p>Studios, production houses, distributors, and other organizations related to Egyptian cinema.</p>
+  </section>
+
+  <section class="company-grid">
+    {companies.map((company) => (
+      <a href={`/companies/${company.slug || company.id}`} class="surface-compact company-card">
+        <p class="eyebrow">{company.kind || "Company"}</p>
+        <h2>{company.name_ar}</h2>
+        <p>{company.name_en || company.country || "Egyptian cinema company"}</p>
+        {(company.founded_year || company.closed_year) && (
+          <span>
+            {company.founded_year || "—"} - {company.closed_year || "present"}
+          </span>
+        )}
+      </a>
+    ))}
+  </section>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p,
+  span {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .company-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .company-card {
+    display: block;
+    padding: 1.2rem;
+  }
+
+  .company-card h2 {
+    margin-top: 0.8rem;
+  }
+
+  .company-card p,
+  .company-card span {
+    color: var(--muted);
+  }
+
+  .company-card p:last-of-type {
+    margin-top: 0.45rem;
+  }
+
+  .company-card span {
+    display: inline-block;
+    margin-top: 0.8rem;
+    color: var(--gold);
+  }
+</style>

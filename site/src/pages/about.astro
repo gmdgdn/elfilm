@@ -1,0 +1,162 @@
+---
+import Base from "../layouts/Base.astro";
+import { getArchiveStats } from "../lib/archive";
+
+const stats = await getArchiveStats();
+---
+
+<Base
+  title="من نحن | ElFilm"
+  description="حراس الذاكرة السينمائية المصرية: منصة أرشيفية وتفاعلية للسينما المصرية والعربية."
+  lang="ar"
+  dir="rtl"
+>
+  <section class="surface hero">
+    <div class="hero-copy">
+      <p class="eyebrow">من نحن</p>
+      <h1>حراس الذاكرة السينمائية</h1>
+      <p class="lead">
+        ElFilm ليست مجرد فهرس للأفلام. نحن مشروع توثيقي يربط الأفلام وصنّاعها والشركات والروابط القانونية
+        في بنية واحدة قابلة للبحث والاكتشاف والمراجعة.
+      </p>
+      <div class="pill-row">
+        <span class="pill">{stats.movies.toLocaleString("en-US")} فيلم</span>
+        <span class="pill">{stats.people.toLocaleString("en-US")} فنان</span>
+        <span class="pill">{stats.companies.toLocaleString("en-US")} شركة</span>
+        <span class="pill">{stats.genres.toLocaleString("en-US")} تصنيف</span>
+      </div>
+    </div>
+
+    <div class="mission-card">
+      <p class="eyebrow">رسالتنا</p>
+      <h2>حفظ، تنظيم، وإتاحة التراث السينمائي</h2>
+      <p>
+        نهدف إلى بناء قاعدة بيانات دقيقة تساعد الباحثين والجمهور على الوصول إلى المعلومات، وتمنح السينما المصرية
+        حضوراً رقمياً يليق بتاريخها الطويل.
+      </p>
+    </div>
+  </section>
+
+  <section class="grid-section">
+    <article class="surface-compact panel">
+      <p class="eyebrow">الرؤية</p>
+      <h2>مرجع رقمي أول للسينما المصرية</h2>
+      <p>
+        نطمح إلى أن تصبح ElFilm الوجهة التي تجمع التاريخ، البحث، والاكتشاف اليومي في تجربة واحدة هادئة وغنية.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <p class="eyebrow">ما يميزنا</p>
+      <h2>منصة تجمع الفهرسة والمجتمع</h2>
+      <p>
+        ندعم البحث الدلالي، صفحات الفنانين، صفحات الشركات، التضمين القانوني لمقاطع المشاهدة، ومساحة تحريرية
+        للحكايات والمقالات والذاكرة اليومية.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <p class="eyebrow">الاستمرارية</p>
+      <h2>قابلية للتوسع مع البيانات</h2>
+      <p>
+        التصميم الحالي يترك مساحة لنمو الخصائص القادمة مثل حسابات المستخدمين، القوائم المخصصة، والتوصيات الذكية
+        دون كسر بنية الأرشيف الأساسية.
+      </p>
+    </article>
+  </section>
+
+  <section class="surface support">
+    <div>
+      <p class="eyebrow">ماذا نقدم</p>
+      <h2>مكتبة رقمية، مجتمع، ومقدمة قانونية واضحة</h2>
+    </div>
+
+    <div class="support-grid">
+      <div>
+        <strong>أرشيف موثق</strong>
+        <p>أفلام، أشخاص، شركات، وبيانات مترابطة تسهّل الاستكشاف والبحث.</p>
+      </div>
+      <div>
+        <strong>مشاهدة قانونية</strong>
+        <p>روابط تضمين من منصات خارجية مرخصة بدل استضافة ملفات الفيديو على خوادمنا.</p>
+      </div>
+      <div>
+        <strong>محتوى تحريري</strong>
+        <p>صفحات ومقالات تشرح الخلفية التاريخية وتعرض النصوص التعريفية والقانونية بوضوح.</p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(280px, 360px);
+    gap: 1.5rem;
+    padding: 1.75rem;
+  }
+
+  .lead {
+    margin-top: 1rem;
+    color: var(--muted);
+    line-height: 1.9;
+    max-width: 60rem;
+  }
+
+  .mission-card,
+  .panel,
+  .support {
+    padding: 1.5rem;
+  }
+
+  .mission-card {
+    border-radius: 28px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .mission-card h2,
+  .panel h2,
+  .support h2 {
+    margin: 0.2rem 0 0;
+  }
+
+  .mission-card p,
+  .panel p,
+  .support p {
+    margin: 0.8rem 0 0;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .grid-section {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .support {
+    margin-top: 1.5rem;
+  }
+
+  .support-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .support-grid strong {
+    display: block;
+    font-size: 1.05rem;
+  }
+
+  @media (max-width: 980px) {
+    .hero,
+    .grid-section,
+    .support-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

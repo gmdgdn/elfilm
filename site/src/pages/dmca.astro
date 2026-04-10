@@ -1,0 +1,117 @@
+---
+import Base from "../layouts/Base.astro";
+
+const effectiveDate = new Intl.DateTimeFormat("ar-EG", {
+  dateStyle: "long",
+}).format(new Date());
+---
+
+<Base
+  title="DMCA | ElFilm"
+  description="سياسة حماية الملكية الفكرية وإشعار إزالة المحتوى لمنصة ElFilm."
+  lang="ar"
+  dir="rtl"
+>
+  <section class="surface hero">
+    <div>
+      <p class="eyebrow">الملكية الفكرية</p>
+      <h1>سياسة حماية الحقوق وإشعار إزالة المحتوى</h1>
+      <p class="muted">تاريخ السريان: {effectiveDate}</p>
+    </div>
+    <div class="callout">
+      <strong>نطاق الاستخدام</strong>
+      <p>
+        هذه الصفحة مخصصة للمحتوى المضمن أو المفهرس من مصادر خارجية مرخّصة أو عامة، وليست بديلاً عن توجيه
+        الإخطارات إلى منصة الاستضافة الأصلية عند اللزوم.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-grid">
+    <article class="surface-compact panel">
+      <h2>1. طبيعة العرض</h2>
+      <p>
+        لا نقوم برفع أو استضافة ملفات الفيديو على خوادمنا. نحن نعرض روابط أو تضمينات من منصات خارجية عامة
+        وتبقى السيطرة التقنية على الملف الأصلي لدى الجهة المستضيفة.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>2. طريقة الإبلاغ</h2>
+      <p>
+        إذا كنت صاحب الحق أو وكيلاً مفوضاً، أرسل إشعاراً مكتوباً إلى البريد القانوني للموقع مع رابط الصفحة
+        المتأثرة ووصف دقيق للعمل محل الشكوى.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>3. ما يجب أن يتضمنه الإشعار</h2>
+      <p>
+        اسم العمل المحمي، رابط الصفحة المتأثرة، معلومات التواصل، بيان حسن النية، وإقرار قانوني بصحة البيانات
+        مع التوقيع المناسب.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>4. إجراءاتنا</h2>
+      <p>
+        عند التحقق من الإشعار، نزيل أو نعطّل الرابط المضمن من منصتنا بسرعة، ثم نوصي بتوجيه الإزالة إلى الجهة
+        المستضيفة للملف الأصلي لضمان الإزالة من المصدر.
+      </p>
+    </article>
+  </section>
+
+  <section class="surface note">
+    <h2>البريد القانوني</h2>
+    <p>
+      أضف عنوان البريد الرسمي الخاص بالإشعارات القانونية هنا قبل الإطلاق النهائي، حتى تكون الصفحة جاهزة
+      للاستقبال الفعلي لطلبات الإزالة والمراجعة.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 340px);
+    gap: 1.5rem;
+    padding: 1.75rem;
+  }
+
+  .muted {
+    margin-top: 0.9rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .callout,
+  .panel,
+  .note {
+    padding: 1.35rem;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .callout p,
+  .panel p,
+  .note p {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  @media (max-width: 920px) {
+    .hero,
+    .content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

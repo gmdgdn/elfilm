@@ -1,0 +1,96 @@
+---
+import Base from "../../layouts/Base.astro";
+import { listPeople } from "../../lib/archive";
+
+const people = await listPeople(36, 0);
+---
+
+<Base
+  title="People | ElFilm"
+  description="Browse actors, directors, and crew members from the ElFilm archive."
+>
+  <section class="section-heading">
+    <div>
+      <p class="eyebrow">Archive collection</p>
+      <h1>People</h1>
+    </div>
+    <p>Actors, directors, writers, and crew are still modeled in D1 and surfaced through the Astro rebuild.</p>
+  </section>
+
+  <section class="person-grid">
+    {people.map((person) => {
+      const name = person.name_ar || person.name_en || "Unknown";
+      return (
+        <a href={`/people/${person.slug || person.id}`} class="surface-compact person-card">
+          {person.profile_image ? (
+            <img src={person.profile_image} alt={name} class="person-image" />
+          ) : (
+            <div class="person-image placeholder"><span>{name}</span></div>
+          )}
+          <div class="person-copy">
+            <h2>{name}</h2>
+            <p>{person.name_en || person.country || "Egyptian cinema archive"}</p>
+            {person.birthdate && <span>{person.birthdate}</span>}
+          </div>
+        </a>
+      );
+    })}
+  </section>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p,
+  span {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .person-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  }
+
+  .person-card {
+    overflow: hidden;
+  }
+
+  .person-image {
+    aspect-ratio: 1 / 1.15;
+    width: 100%;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .person-copy {
+    padding: 1rem;
+  }
+
+  .person-copy p,
+  .person-copy span {
+    color: var(--muted);
+  }
+
+  .person-copy p {
+    margin-top: 0.45rem;
+  }
+
+  .person-copy span {
+    display: inline-block;
+    margin-top: 0.8rem;
+    color: var(--gold);
+  }
+</style>

@@ -1,0 +1,204 @@
+{
+	"$schema": "https://emdashcms.com/seed.schema.json",
+	"version": "1",
+	"meta": {
+		"name": "ElFilm",
+		"description": "Editorial configuration for the ElFilm archive on EmDash and Cloudflare",
+		"author": "ElFilm"
+	},
+
+	"settings": {
+		"title": "ElFilm",
+		"tagline": "The Egyptian cinema archive, rebuilt on Astro and EmDash"
+	},
+
+	"collections": [
+		{
+			"slug": "posts",
+			"label": "Posts",
+			"labelSingular": "Post",
+			"supports": ["drafts", "revisions", "search", "seo"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "featured_image",
+					"label": "Featured Image",
+					"type": "image"
+				},
+				{
+					"slug": "content",
+					"label": "Content",
+					"type": "portableText",
+					"searchable": true
+				},
+				{
+					"slug": "excerpt",
+					"label": "Excerpt",
+					"type": "text"
+				}
+			]
+		},
+		{
+			"slug": "pages",
+			"label": "Pages",
+			"labelSingular": "Page",
+			"supports": ["drafts", "revisions", "search"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "content",
+					"label": "Content",
+					"type": "portableText",
+					"searchable": true
+				}
+			]
+		}
+	],
+
+	"taxonomies": [
+		{
+			"name": "category",
+			"label": "Categories",
+			"labelSingular": "Category",
+			"hierarchical": true,
+			"collections": ["posts"],
+			"terms": [
+				{ "slug": "general", "label": "General" },
+				{ "slug": "updates", "label": "Updates" }
+			]
+		},
+		{
+			"name": "tag",
+			"label": "Tags",
+			"labelSingular": "Tag",
+			"hierarchical": false,
+			"collections": ["posts"],
+			"terms": [
+				{ "slug": "starter", "label": "Starter" },
+				{ "slug": "example", "label": "Example" }
+			]
+		}
+	],
+
+	"menus": [
+		{
+			"name": "primary",
+			"label": "Primary Navigation",
+			"items": [
+				{ "type": "custom", "label": "Home", "url": "/" },
+				{ "type": "custom", "label": "Movies", "url": "/movies" },
+				{ "type": "custom", "label": "Search", "url": "/search" },
+				{ "type": "custom", "label": "Genres", "url": "/genres" },
+				{ "type": "custom", "label": "People", "url": "/people" },
+				{ "type": "custom", "label": "Companies", "url": "/companies" },
+				{ "type": "custom", "label": "Journal", "url": "/posts" },
+				{ "type": "custom", "label": "About", "url": "/about" }
+			]
+		}
+	],
+
+	"widgetAreas": [
+		{
+			"name": "sidebar",
+			"label": "Sidebar",
+			"description": "Sidebar widget area",
+			"widgets": [
+				{
+					"type": "component",
+					"componentId": "core:search",
+					"title": "Search"
+				},
+				{
+					"type": "component",
+					"componentId": "core:categories",
+					"title": "Categories"
+				},
+				{
+					"type": "component",
+					"componentId": "core:recent-posts",
+					"title": "Recent Posts",
+					"settings": { "count": 5 }
+				}
+			]
+		}
+	],
+
+	"content": {
+		"pages": [
+			{
+				"id": "about",
+				"slug": "about",
+				"status": "published",
+				"data": {
+					"title": "About ElFilm",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"text": "ElFilm is a digital archive for Egyptian cinema. This Astro rebuild uses EmDash for editorial workflows and Cloudflare D1 for the archive domain data."
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"posts": [
+			{
+				"id": "post-1",
+				"slug": "emdash-migration",
+				"status": "published",
+				"data": {
+					"title": "Inside the EmDash migration",
+					"excerpt": "Why the ElFilm frontend is moving toward Astro, Cloudflare, and an EmDash-powered editorial stack.",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"text": "ElFilm is migrating from a split Next.js plus Worker frontend toward a Cloudflare-native Astro application. EmDash handles pages, posts, menus, and media, while the archive tables continue to model movies, people, companies, and credits."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "Why this hybrid model" }]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"text": "The hybrid approach keeps the archive schema intact while giving editors a proper CMS experience for pages, journal posts, navigation, and media. It also makes a future Astro-first frontend much more compatible with the Cloudflare stack."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": {
+					"category": ["updates"],
+					"tag": ["example"]
+				}
+			}
+		]
+	}
+}

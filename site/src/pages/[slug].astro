@@ -1,0 +1,60 @@
+---
+import { getEmDashEntry, getSeoMeta, getSiteSettings } from "emdash";
+import { PortableText } from "emdash/ui";
+import Base from "../layouts/Base.astro";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+	return Astro.redirect("/404");
+}
+
+const { entry: page, cacheHint } = await getEmDashEntry("pages", slug);
+
+if (!page) {
+	return Astro.redirect("/404");
+}
+
+Astro.cache.set(cacheHint);
+
+const settings = await getSiteSettings();
+
+const seo = getSeoMeta(page, {
+	siteTitle: settings.title || "ElFilm",
+	siteUrl: Astro.url.origin,
+	path: `/${slug}`,
+});
+---
+
+<Base
+	title={seo.title}
+	description={seo.description}
+	canonical={seo.canonical}
+	content={{ collection: "pages", id: page.data.id, slug }}
+>
+	<article class="surface page-shell">
+		<h1 {...page.edit.title}>{page.data.title}</h1>
+
+		<div {...page.edit.content} class="page-body">
+			<PortableText value={page.data.content} />
+		</div>
+	</article>
+</Base>
+
+<style>
+	.page-shell {
+		padding: 1.75rem;
+	}
+
+	.page-shell h1 {
+		margin: 0;
+		font-size: clamp(2.1rem, 5vw, 3.6rem);
+		letter-spacing: -0.04em;
+	}
+
+	.page-body {
+		margin-top: 1.4rem;
+		color: var(--muted);
+		line-height: 1.85;
+	}
+</style>

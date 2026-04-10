@@ -1,0 +1,183 @@
+---
+import Base from "../../layouts/Base.astro";
+import { listGenres, listMovies } from "../../lib/archive";
+
+const decades = [2020, 2010, 2000, 1990, 1980, 1970, 1960, 1950, 1940, 1930, 1920];
+const search = Astro.url.searchParams;
+const genreIdParam = search.get("genreId");
+const decadeParam = search.get("decade");
+const genreId = genreIdParam ? Number.parseInt(genreIdParam, 10) : undefined;
+const decade = decadeParam ? Number.parseInt(decadeParam, 10) : undefined;
+
+const [genres, movies] = await Promise.all([
+  listGenres(),
+  listMovies({
+    limit: 24,
+    genreId,
+    decade,
+    orderBy: "year",
+    direction: "DESC",
+  }),
+]);
+
+const selectedGenre = genres.find((genre) => genre.id === genreId);
+
+function makeHref(next: { genreId?: number | null; decade?: number | null }) {
+  const params = new URLSearchParams();
+  const finalGenre = next.genreId === undefined ? genreId : next.genreId;
+  const finalDecade = next.decade === undefined ? decade : next.decade;
+
+  if (finalGenre) {
+    params.set("genreId", String(finalGenre));
+  }
+
+  if (finalDecade) {
+    params.set("decade", String(finalDecade));
+  }
+
+  const query = params.toString();
+  return query ? `/genres?${query}` : "/genres";
+}
+---
+
+<Base
+  title="Genres | ElFilm"
+  description="Browse the archive by genre and decade in the Astro + EmDash rebuild."
+>
+  <section class="surface intro">
+    <p class="eyebrow">Browse maps</p>
+    <h1>Genres and decades</h1>
+    <p class="muted intro-copy">
+      Move through the archive by mood, form, and period. These filters are powered directly from the normalized
+      archive tables in D1.
+    </p>
+  </section>
+
+  <section class="filters">
+    <div class="filter-block">
+      <p class="eyebrow">Genre</p>
+      <div class="pill-row">
+        <a href={makeHref({ genreId: null })} class:list={["pill", !genreId && "active"]}>All</a>
+        {genres.map((genre) => (
+          <a href={makeHref({ genreId: genre.id })} class:list={["pill", genreId === genre.id && "active"]}>
+            {genre.name_ar}
+            {genre.movie_count ? <span class="count">{genre.movie_count}</span> : null}
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div class="filter-block">
+      <p class="eyebrow">Decade</p>
+      <div class="pill-row">
+        <a href={makeHref({ decade: null })} class:list={["pill", !decade && "active"]}>All years</a>
+        {decades.map((value) => (
+          <a href={makeHref({ decade: value })} class:list={["pill", decade === value && "active"]}>
+            {value}s
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-heading">
+    <div>
+      <p class="eyebrow">Results</p>
+      <h2>{selectedGenre ? selectedGenre.name_ar : "All genres"}{decade ? ` · ${decade}s` : ""}</h2>
+    </div>
+    <p>{movies.length} titles matched the current filters.</p>
+  </section>
+
+  {
+    movies.length > 0 ? (
+      <section class="poster-grid">
+        {movies.map((movie) => {
+          const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+          return (
+            <a href={`/movies/${movie.slug || movie.id}`} class="surface-compact poster-card">
+              {movie.poster_url ? (
+                <img src={movie.poster_url} alt={title} class="poster-image" />
+              ) : (
+                <div class="poster-image placeholder"><span>{title}</span></div>
+              )}
+              <div class="poster-copy">
+                <p class="muted">{movie.year || "Unknown year"}</p>
+                <h3>{title}</h3>
+                <p class="muted clamp-three">{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+              </div>
+            </a>
+          );
+        })}
+      </section>
+    ) : (
+      <div class="surface empty-state">
+        <p>No movies matched this combination yet.</p>
+      </div>
+    )
+  }
+</Base>
+
+<style>
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .intro {
+    padding: 1.5rem;
+  }
+
+  .intro-copy {
+    margin-top: 1rem;
+    max-width: 54rem;
+    line-height: 1.8;
+  }
+
+  .filters {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .filter-block {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .pill.active {
+    border-color: rgba(229, 91, 45, 0.45);
+    background: rgba(229, 91, 45, 0.14);
+    color: #ffd8c9;
+  }
+
+  .count {
+    margin-left: 0.35rem;
+    color: var(--gold);
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .clamp-three {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

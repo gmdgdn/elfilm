@@ -1,0 +1,131 @@
+---
+import Base from "../layouts/Base.astro";
+
+const effectiveDate = new Intl.DateTimeFormat("ar-EG", {
+  dateStyle: "long",
+}).format(new Date());
+---
+
+<Base
+  title="سياسة الخصوصية | ElFilm"
+  description="سياسة الخصوصية وحماية البيانات الشخصية لمنصة ElFilm."
+  lang="ar"
+  dir="rtl"
+>
+  <section class="surface hero">
+    <div>
+      <p class="eyebrow">الخصوصية والبيانات</p>
+      <h1>سياسة الخصوصية وحماية البيانات الشخصية</h1>
+      <p class="muted">
+        تاريخ السريان: {effectiveDate}
+      </p>
+    </div>
+    <div class="callout">
+      <strong>ملاحظة تشغيلية</strong>
+      <p>
+        هذه الصفحة قالب قانوني عملي، ويجب مراجعته مع المستشار القانوني قبل الإطلاق النهائي لضبط العناوين
+        ووسائل التواصل وأي متطلبات امتثال محلية إضافية.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-grid">
+    <article class="surface-compact panel">
+      <h2>1. ما الذي نجمعه</h2>
+      <p>
+        نجمع فقط البيانات اللازمة لتشغيل الحسابات وتحسين التجربة، مثل الاسم، البريد الإلكتروني، كلمة المرور
+        المشفرة، وتفضيلات الاستخدام.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>2. لماذا نستخدم البيانات</h2>
+      <p>
+        نستخدم البيانات لإدارة الحسابات، تخصيص التوصيات، إرسال التنبيهات الإدارية، وإجراء التحليلات المجمعة
+        التي تساعد على تحسين المنصة.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>3. المشاركة مع الأطراف الخارجية</h2>
+      <p>
+        لا نبيع البيانات الشخصية. قد نعتمد على خدمات خارجية تشغيلية مثل مشغلات الفيديو أو أدوات القياس، وتظل
+        كل خدمة خاضعة لسياسة الخصوصية الخاصة بها.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>4. الأمان</h2>
+      <p>
+        نستخدم بروتوكولات نقل آمنة، وتشفيراً مناسباً، وضوابط وصول تقنية وتنظيمية لحماية البيانات من الوصول
+        غير المصرح به أو التعديل أو الإفشاء.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>5. حقوقك</h2>
+      <p>
+        يمكنك طلب الوصول إلى بياناتك أو تعديلها أو حذفها، وسحب الموافقات التي منحتها في أي وقت، مع مراعاة أي
+        التزامات قانونية أعلى.
+      </p>
+    </article>
+
+    <article class="surface-compact panel">
+      <h2>6. التواصل والتحديثات</h2>
+      <p>
+        نراجع السياسة عند الحاجة لنواكب التعديلات القانونية والتقنية. ولأي طلبات خاصة بالخصوصية، أضف بريد
+        التواصل الرسمي للمنصة هنا قبل الإطلاق.
+      </p>
+    </article>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 340px);
+    gap: 1.5rem;
+    padding: 1.75rem;
+  }
+
+  .muted {
+    margin-top: 0.9rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .callout,
+  .panel {
+    padding: 1.35rem;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .callout strong,
+  .panel h2 {
+    display: block;
+    margin: 0;
+  }
+
+  .callout p,
+  .panel p {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  @media (max-width: 920px) {
+    .hero,
+    .content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

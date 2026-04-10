@@ -1,0 +1,292 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getMovieBySlug } from "../../lib/archive";
+import { absoluteUrl, breadcrumbSchema, movieSchema } from "../../lib/seo";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/404");
+}
+
+const movie = await getMovieBySlug(slug);
+
+if (!movie) {
+  return Astro.redirect("/404");
+}
+
+const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+const cast = movie.people.filter((person) => person.role_kind === "actor").slice(0, 12);
+const crew = movie.people.filter((person) => person.role_kind !== "actor").slice(0, 12);
+const canonical = absoluteUrl(`/movies/${movie.slug || movie.id}`);
+const structuredData = [
+  breadcrumbSchema([
+    { name: "ElFilm", url: absoluteUrl("/") },
+    { name: "Movies", url: absoluteUrl("/movies") },
+    { name: title, url: canonical },
+  ]),
+  movieSchema(movie),
+];
+---
+
+<Base
+  title={`${title} | ElFilm`}
+  description={movie.summary_ar || movie.story || `Archive entry for ${title}.`}
+  canonical={canonical}
+  image={movie.poster_url}
+  openGraphType="video.movie"
+  structuredData={structuredData}
+>
+  <article class="detail-shell">
+    <section class="surface hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Archive entry</p>
+        <h1>{title}</h1>
+        <div class="pill-row meta-row">
+          {movie.year && <span class="pill">{movie.year}</span>}
+          {movie.work_type && <span class="pill">{movie.work_type}</span>}
+          {movie.rating !== null && <span class="pill">Rating {movie.rating}</span>}
+          {movie.duration_minutes && <span class="pill">{movie.duration_minutes} min</span>}
+        </div>
+        <p class="summary">{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+        {movie.watchLinks.length > 0 && (
+          <div class="action-row">
+            <a href={`/watch/${movie.slug || movie.id}`} class="cta-watch">Open watch page</a>
+          </div>
+        )}
+
+        {movie.genres.length > 0 && (
+          <div class="meta-group">
+            <p class="eyebrow">Genres</p>
+            <div class="pill-row">
+              {movie.genres.map((genre) => (
+                <span class="pill">{genre.name_ar}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {movie.tags.length > 0 && (
+          <div class="meta-group">
+            <p class="eyebrow">Tags</p>
+            <div class="pill-row">
+              {movie.tags.slice(0, 10).map((tag) => (
+                <span class="pill">{tag.name_ar}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div class="poster-shell">
+        {movie.poster_url ? (
+          <img src={movie.poster_url} alt={title} class="poster" />
+        ) : (
+          <div class="poster placeholder"><span>{title}</span></div>
+        )}
+      </div>
+    </section>
+
+    <section class="detail-grid">
+      <div class="surface panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Credits</p>
+            <h2>Cast</h2>
+          </div>
+        </div>
+        <div class="credit-list">
+          {cast.length > 0 ? cast.map((person) => (
+            <a href={`/people/${person.slug || person.id}`} class="credit-row">
+              <div>
+                <strong>{person.name_ar || person.name_en || "Unknown"}</strong>
+                <p>{person.role_credit || "Actor"}</p>
+              </div>
+              <span>{person.role_kind}</span>
+            </a>
+          )) : <p class="muted">Cast details are not available yet.</p>}
+        </div>
+      </div>
+
+      <div class="surface panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Credits</p>
+            <h2>Crew</h2>
+          </div>
+        </div>
+        <div class="credit-list">
+          {crew.length > 0 ? crew.map((person) => (
+            <a href={`/people/${person.slug || person.id}`} class="credit-row">
+              <div>
+                <strong>{person.name_ar || person.name_en || "Unknown"}</strong>
+                <p>{person.role_credit || person.role_kind}</p>
+              </div>
+              <span>{person.role_kind}</span>
+            </a>
+          )) : <p class="muted">Crew details are not available yet.</p>}
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-grid">
+      <div class="surface panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Production</p>
+            <h2>Companies</h2>
+          </div>
+        </div>
+        <div class="credit-list">
+          {movie.companies.length > 0 ? movie.companies.map((company) => (
+            <a href={`/companies/${company.slug || company.id}`} class="credit-row">
+              <div>
+                <strong>{company.name_ar}</strong>
+                <p>{company.name_en || "Egyptian film company"}</p>
+              </div>
+              <span>{company.role_kind}</span>
+            </a>
+          )) : <p class="muted">Company credits are not available yet.</p>}
+        </div>
+      </div>
+
+      <div class="surface panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Availability</p>
+            <h2>Watch links</h2>
+          </div>
+        </div>
+        <div class="credit-list">
+          {movie.watchLinks.length > 0 ? movie.watchLinks.map((link) => (
+            <a href={link.url} class="credit-row" target="_blank" rel="noreferrer">
+              <div>
+                <strong>{link.platform}</strong>
+                <p>{link.title || link.source_kind || "External source"}</p>
+              </div>
+              <span>{link.is_official ? "Official" : "Link"}</span>
+            </a>
+          )) : <p class="muted">Watch links are not available yet.</p>}
+        </div>
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  .detail-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) 320px;
+    gap: 1.5rem;
+    padding: 1.75rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .meta-row,
+  .meta-group {
+    margin-top: 1.2rem;
+  }
+
+  .summary {
+    margin-top: 1.4rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 52rem;
+  }
+
+  .action-row {
+    margin-top: 1.25rem;
+  }
+
+  .cta-watch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 1.1rem;
+    border-radius: 999px;
+    background: rgba(229, 91, 45, 0.14);
+    border: 1px solid rgba(229, 91, 45, 0.35);
+    color: #ffd8c9;
+    font-weight: 600;
+  }
+
+  .poster-shell {
+    min-height: 460px;
+  }
+
+  .poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .panel {
+    padding: 1.4rem;
+  }
+
+  .credit-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .credit-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .credit-row p {
+    margin-top: 0.4rem;
+    color: var(--muted);
+  }
+
+  .credit-row span {
+    color: var(--gold);
+  }
+
+  @media (max-width: 960px) {
+    .hero,
+    .detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .poster-shell {
+      min-height: 380px;
+    }
+  }
+</style>

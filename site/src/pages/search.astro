@@ -1,0 +1,230 @@
+---
+import Base from "../layouts/Base.astro";
+import { semanticMovieSearch } from "../lib/archive";
+
+const query = Astro.url.searchParams.get("q")?.trim() || "";
+const yearMinParam = Astro.url.searchParams.get("yearMin");
+const yearMaxParam = Astro.url.searchParams.get("yearMax");
+const workType = Astro.url.searchParams.get("workType")?.trim() || undefined;
+const yearMin = yearMinParam ? Number.parseInt(yearMinParam, 10) : undefined;
+const yearMax = yearMaxParam ? Number.parseInt(yearMaxParam, 10) : undefined;
+
+const results = query
+  ? await semanticMovieSearch({
+      query,
+      yearMin,
+      yearMax,
+      workType,
+      limit: 18,
+    })
+  : [];
+---
+
+<Base
+  title={query ? `Search: ${query} | ElFilm` : "Search the archive | ElFilm"}
+  description="Semantic movie search powered by Cloudflare Vectorize and Workers AI."
+>
+  <section class="surface search-hero">
+    <p class="eyebrow">Semantic archive search</p>
+    <h1>Find films by memory, mood, or scene details</h1>
+    <p class="muted lead">
+      Search uses Cloudflare Vectorize and Workers AI when available, and falls back to keyword matching if vector
+      results are unavailable. Years inside the query are treated as filters automatically, so exact-title searches stay
+      sharp while scene and mood searches remain semantic.
+    </p>
+
+    <form method="get" action="/search" class="search-form">
+      <input
+        type="search"
+        name="q"
+        value={query}
+        placeholder="A political thriller from the 1960s with courtroom scenes"
+        aria-label="Search the movie archive"
+      />
+      <input type="number" name="yearMin" value={yearMin ?? ""} min="1900" max="2030" placeholder="From year" />
+      <input type="number" name="yearMax" value={yearMax ?? ""} min="1900" max="2030" placeholder="To year" />
+      <button type="submit">Search archive</button>
+    </form>
+  </section>
+
+  <section class="section-heading">
+    <div>
+      <p class="eyebrow">Results</p>
+      <h2>{query ? `Matches for “${query}”` : "Start with a query"}</h2>
+    </div>
+    <p>
+      {query ? `${results.length} results returned${results[0] ? ` · ${
+        results[0].source === "hybrid"
+          ? "hybrid ranking"
+          : results[0].source === "vector"
+            ? "vector search"
+            : "keyword fallback"
+      }` : ""}` : "Describe a film, a performer, a scene, or a period."}
+    </p>
+  </section>
+
+  {
+    query ? (
+      results.length > 0 ? (
+        <section class="search-grid">
+          {results.map((movie) => {
+            const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+            return (
+              <a href={`/movies/${movie.slug || movie.id}`} class="surface-compact result-card">
+                {movie.poster_url ? (
+                  <img src={movie.poster_url} alt={title} class="result-image" />
+                ) : (
+                  <div class="result-image placeholder"><span>{title}</span></div>
+                )}
+                <div class="result-copy">
+                  <div class="meta-line">
+                    <span>{movie.year || "Unknown year"}</span>
+                    <span>{
+                      movie.source === "hybrid"
+                        ? `Hybrid ${Math.round(movie.similarity * 100)}%`
+                        : movie.source === "vector"
+                          ? `Similarity ${Math.round(movie.similarity * 100)}%`
+                          : "Keyword match"
+                    }</span>
+                  </div>
+                  <h3>{title}</h3>
+                  <p>{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+                </div>
+              </a>
+            );
+          })}
+        </section>
+      ) : (
+        <div class="surface empty-state">
+          <p>No films matched this query yet. Try a performer, a decade, or a short scene description.</p>
+        </div>
+      )
+    ) : (
+      <div class="surface empty-state">
+        <p>Try queries like “A black-and-white musical from the 1950s” or “Naguib Mahfouz adaptation”.</p>
+      </div>
+    )
+  }
+</Base>
+
+<style>
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .search-hero {
+    padding: 1.5rem;
+  }
+
+  .lead {
+    margin-top: 1rem;
+    max-width: 56rem;
+    line-height: 1.8;
+  }
+
+  .search-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) 160px 160px auto;
+    gap: 0.8rem;
+    margin-top: 1.4rem;
+  }
+
+  .search-form input,
+  .search-form button {
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    padding: 0.95rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font: inherit;
+  }
+
+  .search-form button {
+    background: var(--accent);
+    border-color: transparent;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .search-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .result-card {
+    overflow: hidden;
+  }
+
+  .result-image {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .placeholder {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .result-copy {
+    padding: 1rem;
+  }
+
+  .meta-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: var(--gold);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .result-copy h3 {
+    margin-top: 0.65rem;
+    font-size: 1.2rem;
+  }
+
+  .result-copy p {
+    margin-top: 0.65rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  @media (max-width: 980px) {
+    .search-form {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .search-form input[type="search"] {
+      grid-column: 1 / -1;
+    }
+
+    .search-form button {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .search-form {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,291 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getMovieBySlug } from "../../lib/archive";
+import { absoluteUrl, breadcrumbSchema, movieSchema } from "../../lib/seo";
+
+const { slug } = Astro.params;
+const normalizedSlug = slug?.match(/EF-M-\d+/i)?.[0] || slug;
+
+if (!normalizedSlug) {
+  return Astro.redirect("/404");
+}
+
+const movie = await getMovieBySlug(normalizedSlug);
+
+if (!movie) {
+  return Astro.redirect("/404");
+}
+
+const title = movie.title_ar || movie.title || movie.title_en || "Untitled";
+const selectedLink = movie.watchLinks[0] ?? null;
+const canEmbed = selectedLink && (selectedLink.embed_type === "iframe" || selectedLink.embed_type === "direct");
+const canonical = absoluteUrl(`/watch/${movie.slug || movie.id}`);
+const structuredData = [
+  breadcrumbSchema([
+    { name: "ElFilm", url: absoluteUrl("/") },
+    { name: "Movies", url: absoluteUrl("/movies") },
+    { name: title, url: absoluteUrl(`/movies/${movie.slug || movie.id}`) },
+    { name: "Watch", url: canonical },
+  ]),
+  movieSchema(movie),
+];
+
+function watchSourceLabel(value?: string | null) {
+  switch (value) {
+    case "exa":
+      return "Exa discovery";
+    case "youtube-search":
+      return "YouTube search";
+    case "manual":
+      return "Manual source";
+    default:
+      return value || null;
+  }
+}
+---
+
+<Base
+  title={`Watch ${title} | ElFilm`}
+  description={movie.summary_ar || movie.story || `Watch sources for ${title}.`}
+  canonical={canonical}
+  image={movie.poster_url}
+  openGraphType="video.movie"
+  structuredData={structuredData}
+>
+  <article class="watch-shell">
+    <section class="surface watch-stage">
+      <div class="player-shell">
+        {
+          selectedLink ? (
+            canEmbed ? (
+              selectedLink.embed_type === "iframe" && selectedLink.embed_url ? (
+                <iframe
+                  src={selectedLink.embed_url}
+                  title={`Watch ${title}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                  loading="lazy"
+                />
+              ) : (
+                <video
+                  controls
+                  playsinline
+                  poster={movie.poster_url || undefined}
+                  src={selectedLink.embed_url || selectedLink.url}
+                />
+              )
+            ) : (
+              <div class="external-stage">
+                <h2>External watch source</h2>
+                <p>
+                  This source is available as an outbound link only. Open it in a new tab to continue watching.
+                </p>
+                <a href={selectedLink.url} target="_blank" rel="noreferrer" class="cta">
+                  Open source
+                </a>
+              </div>
+            )
+          ) : (
+            <div class="external-stage">
+              <h2>No watch links yet</h2>
+              <p>The archive entry exists, but there are no active viewing sources attached right now.</p>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="watch-meta">
+        <p class="eyebrow">Watch</p>
+        <h1>{title}</h1>
+        <div class="pill-row">
+          {movie.year && <span class="pill">{movie.year}</span>}
+          {movie.work_type && <span class="pill">{movie.work_type}</span>}
+          {selectedLink?.platform && <span class="pill">{selectedLink.platform}</span>}
+          {selectedLink?.is_official ? <span class="pill">Official source</span> : null}
+          {selectedLink?.source_kind ? <span class="pill">{watchSourceLabel(selectedLink.source_kind)}</span> : null}
+        </div>
+        <p class="summary">{movie.summary_ar || movie.story || "Archive summary coming soon."}</p>
+        <div class="action-row">
+          <a href={`/movies/${movie.slug || movie.id}`} class="cta secondary">Back to movie</a>
+          {selectedLink ? (
+            <a href={selectedLink.url} target="_blank" rel="noreferrer" class="cta secondary">
+              Open external link
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </section>
+
+    <section class="watch-grid">
+      <div class="surface panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Available sources</p>
+            <h2>Watch links</h2>
+          </div>
+        </div>
+        <div class="source-list">
+          {movie.watchLinks.length > 0 ? movie.watchLinks.map((link) => (
+            <a href={link.url} target="_blank" rel="noreferrer" class:list={["source-card", selectedLink?.id === link.id && "selected"]}>
+              <div>
+                <strong>{link.platform}</strong>
+                <p>{link.title || watchSourceLabel(link.source_kind) || "External source"}</p>
+              </div>
+              <span>{link.is_official ? "Official" : "Open"}</span>
+            </a>
+          )) : <p class="muted">No viewing sources are available yet.</p>}
+        </div>
+      </div>
+
+      <div class="surface panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Archive context</p>
+            <h2>Title details</h2>
+          </div>
+        </div>
+        {movie.poster_url ? <img src={movie.poster_url} alt={title} class="watch-poster" /> : null}
+        <div class="pill-row details-row">
+          {movie.genres.map((genre) => (
+            <a href={`/genres?genreId=${genre.id}`} class="pill">{genre.name_ar}</a>
+          ))}
+        </div>
+        <p class="muted details-copy">
+          {movie.companies.length > 0
+            ? `Companies: ${movie.companies.map((company) => company.name_ar).join(", ")}`
+            : "Company details are not available yet."}
+        </p>
+      </div>
+    </section>
+  </article>
+</Base>
+
+<style>
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  .watch-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .watch-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 420px);
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .player-shell {
+    min-height: 420px;
+    border-radius: 26px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .player-shell iframe,
+  .player-shell video {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #000;
+  }
+
+  .external-stage {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 1rem;
+    min-height: 420px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .watch-meta h1 {
+    font-size: clamp(2.1rem, 5vw, 3.8rem);
+    letter-spacing: -0.04em;
+  }
+
+  .summary {
+    margin-top: 1.2rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.4rem;
+  }
+
+  .watch-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 1.5rem;
+  }
+
+  .panel {
+    padding: 1.4rem;
+  }
+
+  .source-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .source-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .source-card.selected {
+    border-color: rgba(229, 91, 45, 0.35);
+    background: rgba(229, 91, 45, 0.08);
+  }
+
+  .source-card p {
+    margin-top: 0.35rem;
+    color: var(--muted);
+  }
+
+  .source-card span {
+    color: var(--gold);
+  }
+
+  .watch-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .details-row {
+    margin-top: 1rem;
+  }
+
+  .details-copy {
+    margin-top: 1rem;
+    line-height: 1.8;
+  }
+
+  @media (max-width: 980px) {
+    .watch-stage,
+    .watch-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
